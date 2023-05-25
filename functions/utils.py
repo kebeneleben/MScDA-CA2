@@ -16,8 +16,8 @@ URL = "https://api.worldnewsapi.com/search-news"
 def request_news2023(sourceCountry):
     data = []
     requestParams = {
-        "earliest-publish-date": "2023-01-01T00:00:00Z",
-        "latest-publish-date": "2023-03-31T24:59:00Z",
+        "earliest-publish-date": "2022-11-01T00:00:00Z",
+        "latest-publish-date": "2023-04-30T23:59:00Z",
         "source-countries": sourceCountry,
         "number": 100,
         "api-key": NEWS_API_KEY,
@@ -27,7 +27,6 @@ def request_news2023(sourceCountry):
     }
     # Python doesn't have a do-while loop. So the loop below emulates how a do-while loop executes. Do-while loop was chosen so that there is an assurance that the code was executed at least one time.
     while True:
-        print(requestParams)
         response = send_request(requestParams)
         data = data + response["news"]
         
@@ -35,7 +34,7 @@ def request_news2023(sourceCountry):
         
         # https://www.scaler.com/topics/check-if-key-exists-in-dictionary-python/
         if("offset" in response):
-            requestParams["offset"] += 1
+            requestParams["offset"] += 100
         
         if len(data) >= response["available"]:
             break
@@ -49,12 +48,17 @@ def send_request(params):
 #     print(response.headers)
     return data
 
-def save_to_csv(data):
+def preprocess_data(data):
+    '''Function that removes the keys that are not needed and removes the duplicates in the data'''
+    keysToRemove = ["summary", "text", "url", "image", "author", "language"]
+    return [ dict(t) for t in set([tuple(d.items()) for d in list(map(lambda x: { k: v for k, v in x.items() if k not in keysToRemove }, data))])]
+
+def save_to_csv(data, filename):
     # https://stackoverflow.com/questions/48745333/using-pandas-how-do-i-save-an-exported-csv-file-to-a-folder-relative-to-the-scr
     # https://stackoverflow.com/questions/918154/relative-paths-in-python
     file_dir = os.path.realpath('...')
     print(file_dir)
     csv_folder = 'datasets'
-    file_path = os.path.join(file_dir, csv_folder, 'uk_news.csv')
+    file_path = os.path.join(file_dir, csv_folder, filename)
 
     pd.DataFrame.from_dict(data).to_csv(file_path, index=False)
