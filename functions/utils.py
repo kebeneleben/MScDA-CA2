@@ -5,7 +5,12 @@ import os
 import requests
 import pandas as pd
 from pandas.tseries.offsets import MonthEnd
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
+nltk.download('wordnet')
 load_dotenv()
 
 # CONSTANTS USED THROUGH OUT THE 
@@ -62,3 +67,30 @@ def save_to_csv(data, filename):
     file_path = os.path.join(file_dir, csv_folder, filename)
 
     pd.DataFrame.from_dict(data).to_csv(file_path, index=False)
+    
+def remove_punctuation(text):
+    # https://stackoverflow.com/questions/43038139/regex-removing-all-punctuation-but-leave-decimal-points-and-hyphenated-words
+    pattern = r'[^a-zA-Z0-9_.-]|(?<!\d)\.(?!\d)|(?<!\w)-(?!\w)'
+    return re.sub(pattern, '  ', text)
+
+def lemmatize_text(text):
+    # Textblob also has a lemmatizer library but NLTK lemmatizer was used since wordnet has also been downloaded. This will also save some memory (albeit small) but still an improvement for an overall performance.
+    lemmatizer = WordNetLemmatizer()
+    return " ".join([lemmatizer.lemmatize(word) for word in text.split()])
+
+def remove_stopwords(text):
+    stop = stopwords.words('english')
+    return " ".join(x for x in text.split() if x not in stop)
+
+def lower_case(text):
+    return text.lower()
+
+def count_words(x):
+    return len(str(x).split())
+
+def set_sentiment_label(x):
+    if x > 0:
+        return "positive"
+    if x < 0:
+        return "negative"
+    return "neutral"
