@@ -9,6 +9,8 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from statsmodels.graphics.gofplots import qqplot
+import plotly.graph_objs as go
 
 nltk.download('wordnet')
 load_dotenv()
@@ -94,3 +96,80 @@ def set_sentiment_label(x):
     if x < 0:
         return "negative"
     return "neutral"
+
+def create_qqplot_current_month(data, month, country):
+    qqplot_data = qqplot(data[data["month"] == month]["sentiment"], line='s').gca().lines
+    
+    fig = go.Figure()
+    fig.add_trace({
+        'type': 'scatter',
+        'x': qqplot_data[0].get_xdata(),
+        'y': qqplot_data[0].get_ydata(),
+        'mode': 'markers',
+        'marker': {
+            'color': '#19d3f3'
+        }
+    })
+
+    fig.add_trace({
+        'type': 'scatter',
+        'x': qqplot_data[1].get_xdata(),
+        'y': qqplot_data[1].get_ydata(),
+        'mode': 'lines',
+        'line': {
+            'color': '#636efa'
+        }
+
+    })
+
+
+    fig['layout'].update({
+        'title': f'Quantile-Quantile Plot for Construction-related News Headlines for {country} for the {month}',
+        'xaxis': {
+            'title': 'Theoritical Quantities',
+            'zeroline': False
+        },
+        'yaxis': {
+            'title': 'Observable Values'
+        },
+        'showlegend': False,
+        'width': 1000,
+        'height': 700,
+    })
+
+    fig.show()
+    
+def create_inf_table(headers, data, title):
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=headers),
+                cells=dict(values=data))
+            ],
+        layout = go.Layout(
+            title={
+                "text": title,
+                "x": 0.5,
+                "xanchor": "center",
+                "yanchor": "middle"
+            },
+            width = 900,
+            height = 800
+        )
+    )
+    fig.show()
+    
+def check_anderson_darling_result(result):
+    significance_level = 0.05
+    
+    test_statistic = result.statistic
+    critical_values = result.critical_values
+    
+    # Compare the test statistic with critical values
+    for i, crit_value in enumerate(critical_values):
+        if test_statistic > crit_value:
+            return f"At significance level {significance_level}, reject the null hypothesis."
+            break
+            
+    return f"At significance level {significance_level}, do not reject the null hypothesis."
+            
