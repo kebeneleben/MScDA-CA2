@@ -15,12 +15,15 @@ import plotly.graph_objs as go
 nltk.download('wordnet')
 load_dotenv()
 
+# Due to the data of the two contries having the same structure, the two dataframes shares the same functions.
+
 # CONSTANTS USED THROUGH OUT THE 
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 MONGODB_URI = os.getenv("MONGODB_URI")
 URL = "https://api.worldnewsapi.com/search-news"
 
 def request_news2023(sourceCountry):
+    '''Retrive the news related to construction sector from November 2022 to December 2023'''
     data = []
     requestParams = {
         "earliest-publish-date": "2022-11-01T00:00:00Z",
@@ -48,6 +51,7 @@ def request_news2023(sourceCountry):
     
     return data
 
+# There are other libraries that can handle HTTP requests as well. One of which is urllib3. Due to the simplicity and ease of implementation, the researcher chose to use request package.
 def send_request(params):
     '''This function sends a GET HTTP request to a specified URL'''
     response = requests.get(url = URL, params = params)
@@ -58,6 +62,7 @@ def send_request(params):
 def preprocess_data(data):
     '''Function that removes the keys that are not needed and removes the duplicates in the data'''
     keysToRemove = ["summary", "text", "url", "image", "author", "language"]
+    # Loop through all the array
     return [ dict(t) for t in set([tuple(d.items()) for d in list(map(lambda x: { k: v for k, v in x.items() if k not in keysToRemove }, data))])]
 
 def save_to_csv(data, filename):
